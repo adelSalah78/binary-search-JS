@@ -107,39 +107,57 @@ class SingleNode {
         if(this.props.nodesCount <= 1)
           return null;
         let line = [];
-        let index = 0;
+        let index = 1;
         let node1Left = this.props.node1.left;
         let node2Left = this.props.node2.left;
         let node1Top = this.props.node1.top;
         let node2Top = this.props.node2.top;
+
+        let coordinates = {top1: 0, top2: 0, left1: 0, left2: 0};
+        let slope = 0;
+
+        let childOnLeft = false;
 
         // console.log('node1Left: '+node1Left);
         // console.log('node2Left: '+node2Left);
         // console.log('node1Top: '+node1Top);
         // console.log('node2Top: '+node2Top);
 
+        //the child is in the left
         if(node1Left < node2Left){
-          while(node2Top < node1Top){
-            line.push(
-              <div key={index} style={{left:this.props.node2.left+20, top:this.props.node2.top + 20 + index, backgroundColor: 'Black', position:'absolute', width: '1px', height: '1px'}}>
+          coordinates.top1 =  node2Top + 20;
+          coordinates.left1 = node2Left;
 
-              </div>
-            );
-            index++;
-            node2Top++;
-          }
+          coordinates.top2 =  node1Top;
+          coordinates.left2 = node1Left;
+
+          childOnLeft = true;
         }
+        // the child is on the right
         else{
-          while(node2Top < node1Top){
-            line.push(
-              <div key={index} style={{left:this.props.node2.left+20, top:this.props.node2.top + 20 + index, backgroundColor: 'Black', position:'absolute', width: '1px', height: '1px'}}>
+          coordinates.top1 =  node2Top + 20;
+          coordinates.left1 = node2Left + 20;
 
-              </div>
-            );
-            index++;
-            node2Top++;
-          }
+          coordinates.top2 =  node1Top;
+          coordinates.left2 = node1Left;
         }
+        slope = (coordinates.top2 - coordinates.top1) / (coordinates.left2 - coordinates.left1);
+        if(childOnLeft){
+          slope = slope * -1;
+          index = index * -1;
+        }
+
+        // let loopCounter = 0;
+
+        while(coordinates.top1 < coordinates.top2){
+          coordinates.top1+= slope;
+          coordinates.left1+= index;
+          line.push(
+            <div style={{position: 'absolute', width: '1px', height: '1px', backgroundColor: 'Black', left: coordinates.left1+'px' , top: coordinates.top1+'px'}}>
+            </div>
+          );
+        }
+
         // console.log('line: '+JSON.stringify(line));
         return(
           <div>
