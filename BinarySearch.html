@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="https://fb.me/react-15.0.0.js"></script>
+    <script src="https://fb.me/react-dom-15.0.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.5.2/redux.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/4.4.5/react-redux.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <script type="text/babel">
+
+class SingleNode {
+  /*constructor(parentNode, leftNode, rightNode, number, top, left) {
+    this.parentNode = parentNode;
+    this.leftNode = leftNode;
+    this.rightNode = rightNode;
+    this.number = number;
+
+    this.left = left;
+    this.top = top;
+  }*/
+
+  constructor() {
+    this.parentNode = null;
+    this.leftNode = null;
+    this.rightNode = null;
+    this.number = null;
+
+    this.left = 0;
+    this.top = 0;
+
+    this.index = 0;
+  }
+
+  setNumber(value){
+    this.number = value;
+  }
+  setLeftNode(value){
+    this.leftNode = value;
+  }
+  setRightNode(value){
+    this.rightNode = value;
+  }
+  setParentNode(value){
+    this.parentNode = value;
+  }
+
+  setLeft(value){
+    this.left = value;
+  }
+  setTop(value){
+    this.top = value;
+  }
+  setIndex(value){
+    this.index = value;
+  }
+}
+
+//--------------------------------------------------------------------------
+    class TreeNodes extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+
+      getStyle(node){
+        // console.log('node: '+JSON.stringify(node));
+        return {
+          top: node.top+'px',
+          left: node.left+'px',
+          width: 20+'px',
+          height: 20+'px',
+          backgroundColor: 'Blue',
+          position: 'absolute'
+        };
+      }
+
+      render(){
+        // console.log('render Tree Nodes');
+        // console.log(this.props.nodes);
+        let drawnNodes = this.props.nodes.map(node =>
+          <div key={node.index} style = {this.getStyle(node)}>
+            {node.number}
+          </div>
+        );
+        // console.log(drawnNodes);
+        return(
+          <div>
+            {drawnNodes}
+          </div>
+        );
+      }
+    }
+
+    //--------------------------------------------------------------------------
+    class Line extends React.Component {
+      constructor(props) {
+        super(props);
+        // console.log(JSON.stringify(this.props.node1));
+        // console.log(JSON.stringify(this.props.node2));
+      }
+      // node1 is the child one and node2 is the parent
+      render(){
+        console.log(this.props.nodesCount);
+        if(this.props.nodesCount <= 1)
+          return null;
+        let line = [];
+        let index = 0;
+        let node1Left = this.props.node1.left;
+        let node2Left = this.props.node2.left;
+        let node1Top = this.props.node1.top;
+        let node2Top = this.props.node2.top;
+
+        // console.log('node1Left: '+node1Left);
+        // console.log('node2Left: '+node2Left);
+        // console.log('node1Top: '+node1Top);
+        // console.log('node2Top: '+node2Top);
+
+        if(node1Left < node2Left){
+          while(node2Top < node1Top){
+            line.push(
+              <div key={index} style={{left:this.props.node2.left+20, top:this.props.node2.top + 20 + index, backgroundColor: 'Black', position:'absolute', width: '1px', height: '1px'}}>
+
+              </div>
+            );
+            index++;
+            node2Top++;
+          }
+        }
+        else{
+          while(node2Top < node1Top){
+            line.push(
+              <div key={index} style={{left:this.props.node2.left+20, top:this.props.node2.top + 20 + index, backgroundColor: 'Black', position:'absolute', width: '1px', height: '1px'}}>
+
+              </div>
+            );
+            index++;
+            node2Top++;
+          }
+        }
+        // console.log('line: '+JSON.stringify(line));
+        return(
+          <div>
+          {line}
+          </div>
+        );
+      }
+    }
+    //--------------------------------------------------------------------------
+    class App extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          TreeNodes: [],
+          NodesCount: 0,
+          RootNode : null
+        };
+      }
+
+      handleAddNumber(){
+        let newNumber = this.refs.newNumber.value;
+        if(!newNumber || newNumber == null || newNumber==''){
+          alert('Do not be so damn funny please :)');
+          return;
+        }
+
+        if(this.state.NodesCount == 0){
+          let NewRootNode = new SingleNode();
+          // console.log('NewRootNode: '+JSON.stringify(NewRootNode));
+          // NewRootNode.number = newNumber;
+          // NewRootNode.top = 10;
+          // NewRootNode.left = 400;
+          NewRootNode.setNumber(newNumber);
+          NewRootNode.setTop(10);
+          NewRootNode.setLeft(400);
+          NewRootNode.setIndex(0);
+
+          let newState = {
+            RootNode: NewRootNode,
+            NodesCount: 1,
+            TreeNodes: [NewRootNode]
+          };
+          this.setState(newState);
+        }
+
+        else{
+            let theNode = this.state.RootNode;
+            let NewNode = null;
+            let level = 1;
+            while(theNode!= null){
+              if(newNumber <= theNode.number){
+                  if( theNode.leftNode == null){
+                    NewNode = new SingleNode();
+                    // NewNode.parentNode = theNode;
+                    // NewNode.number = newNumber;
+                    // NewNode.left = theNode.left - 100;
+                    // NewNode.top = theNode.top + 40;
+
+                    NewNode.setParentNode(theNode);
+                    NewNode.setNumber(newNumber);
+                    NewNode.setLeft(theNode.left - (100+(level*10)));
+                    NewNode.setTop(theNode.top + 40);
+
+                    theNode.setLeftNode(NewNode);
+                    break;
+                }
+                else{
+                  theNode = theNode.leftNode;
+                  level++;
+                }
+              }
+              else if(newNumber > theNode.number){
+                  if(theNode.rightNode == null){
+                    NewNode = new SingleNode();
+                    // NewNode.parentNode = theNode;
+                    // NewNode.number = newNumber;
+                    // NewNode.left = theNode.left + 100;
+                    // NewNode.top = theNode.top + 40;
+
+                    NewNode.setParentNode(theNode);
+                    NewNode.setNumber(newNumber);
+                    NewNode.setLeft(theNode.left + 100+(level*10));
+                    NewNode.setTop(theNode.top + 40);
+
+                    theNode.setRightNode(NewNode);
+                    break;
+                }
+                else{
+                  theNode = theNode.rightNode;
+                  level++;
+                }
+              }
+              // console.log('theNode: '+JSON.stringify(theNode));
+            }
+
+            this.lineParentNode = theNode;
+            this.lineChildNode = NewNode;
+
+            let oldNodes = this.state.TreeNodes;
+            let oldNodeCount = this.state.NodesCount;
+            NewNode.setIndex(oldNodeCount + 1);
+            let newState = {
+              NodesCount: oldNodeCount + 1,
+              TreeNodes: [...oldNodes,NewNode]
+            };
+            this.setState(newState);
+        }
+
+        this.refs.newNumber.value = '';
+      }
+
+      render(){
+        // let drawnTreeNodes = this.state.TreeNodes.map(node =>{
+          // <TreeNode node={node}/>
+        // });
+        return(
+          <div>
+            {/*<div ref="test">*/}
+              <TreeNodes nodes = {this.state.TreeNodes}/>
+              <Line node1={this.lineChildNode} node2={this.lineParentNode} nodesCount={this.state.NodesCount}/>
+            <br/>
+            Enter a number: <input ref="newNumber" type="text"/><br/>
+            <button onClick={this.handleAddNumber.bind(this)}>Add number</button>
+          </div>
+        );
+      }
+    }
+// -----------------------------------------------------------------------------
+
+    // let App =
+     ReactDOM.render(<App/>,document.getElementById('DataStructure'));
+    </script>
+
+<div id="DataStructure"></div>
+
+  </body>
+</html>
