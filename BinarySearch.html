@@ -57,6 +57,14 @@ class SingleNode {
   setIndex(value){
     this.index = value;
   }
+
+  getColor(){
+    return this.color;
+  }
+  setColor(value){
+    this.color = value;
+  }
+
 }
 
 //--------------------------------------------------------------------------
@@ -72,8 +80,9 @@ class SingleNode {
           left: node.left+'px',
           width: 20+'px',
           height: 20+'px',
-          backgroundColor: 'Blue',
-          position: 'absolute'
+          backgroundColor: node.getColor(),
+          position: 'absolute',
+          color: 'white'
         };
       }
 
@@ -184,6 +193,14 @@ class SingleNode {
           alert('Do not be so damn funny please :)');
           return;
         }
+        newNumber = parseInt(newNumber);
+        if(isNaN(newNumber)){
+          alert('Only numbers are allowed you, the funniest guy in the whole world :)');
+          return;
+        }
+
+        this.makeAllNodesBgBlue();
+
 
         if(this.state.NodesCount == 0){
           let NewRootNode = new SingleNode();
@@ -193,8 +210,9 @@ class SingleNode {
           // NewRootNode.left = 400;
           NewRootNode.setNumber(newNumber);
           NewRootNode.setTop(10);
-          NewRootNode.setLeft(650);
+          NewRootNode.setLeft(1000);
           NewRootNode.setIndex(0);
+          NewRootNode.setColor('Blue');
 
           let newState = {
             RootNode: NewRootNode,
@@ -207,8 +225,9 @@ class SingleNode {
         else{
             let theNode = this.state.RootNode;
             let NewNode = null;
-            let level = 1;
-            let spacing = 300;
+            let level = 2;
+            let spacing = 600;
+            let spacingDecreasing = 250;
             while(theNode!= null){
               if(newNumber <= theNode.number){
                   if( theNode.leftNode == null){
@@ -220,14 +239,20 @@ class SingleNode {
 
                     NewNode.setParentNode(theNode);
                     NewNode.setNumber(newNumber);
-                    NewNode.setLeft(theNode.left - (spacing+(level*10)));
-                    NewNode.setTop(theNode.top + 40);
+                    NewNode.setLeft(theNode.left - spacing );
+                    NewNode.setTop(theNode.top + 80);
+                    NewNode.setColor('Red');
 
                     theNode.setLeftNode(NewNode);
+                    theNode.setColor('Red');
                     break;
                 }
                 else{
+                  theNode.setColor('Red');
                   theNode = theNode.leftNode;
+                  if(level != 2)
+                    spacingDecreasing = 150;
+                  spacing-=spacingDecreasing;
                   level++;
                 }
               }
@@ -241,19 +266,26 @@ class SingleNode {
 
                     NewNode.setParentNode(theNode);
                     NewNode.setNumber(newNumber);
-                    NewNode.setLeft(theNode.left + (spacing+(level*10)));
-                    NewNode.setTop(theNode.top + 40);
+                    NewNode.setLeft(theNode.left + spacing);
+                    NewNode.setTop(theNode.top + 80);
+                    NewNode.setColor('Red');
 
                     theNode.setRightNode(NewNode);
+                    theNode.setColor('Red');
                     break;
                 }
                 else{
+                  theNode.setColor('Red');
                   theNode = theNode.rightNode;
+                  if(level != 2)
+                    spacingDecreasing = 150;
+                  spacing-=spacingDecreasing;
                   level++;
-                  spacing = spacing - 80;
                 }
               }
               // console.log('theNode: '+JSON.stringify(theNode));
+              if(spacing <= 0)
+                spacing = 400;
             }
 
             this.lineParentNode = theNode;
@@ -280,6 +312,12 @@ class SingleNode {
         }
 
         this.refs.newNumber.value = '';
+      }
+
+      makeAllNodesBgBlue(){
+        for(let i=0;i<this.state.TreeNodes.length;i++){
+          this.state.TreeNodes[i].setColor('Blue');
+        }
       }
 
       render(){
