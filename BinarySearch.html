@@ -33,6 +33,7 @@ class SingleNode {
     this.top = 0;
 
     this.index = 0;
+    this.level = 0;
   }
 
   setNumber(value){
@@ -64,6 +65,12 @@ class SingleNode {
   setColor(value){
     this.color = value;
   }
+  setLevel(value){
+    this.level = value;
+  }
+  setDirection(value){
+    this.direction = value;
+  }
 
 }
 
@@ -78,11 +85,12 @@ class SingleNode {
         return {
           top: node.top+'px',
           left: node.left+'px',
-          width: 20+'px',
-          height: 20+'px',
+          width: 40+'px',
+          height: 40+'px',
           backgroundColor: node.getColor(),
           position: 'absolute',
-          color: 'white'
+          color: 'white',
+          fontSize: 'small'
         };
       }
 
@@ -91,7 +99,7 @@ class SingleNode {
         // console.log(this.props.nodes);
         let drawnNodes = this.props.nodes.map(node =>
           <div key={node.index} style = {this.getStyle(node)}>
-            {node.number}
+            {node.number}({node.level})
           </div>
         );
         // console.log(drawnNodes);
@@ -112,7 +120,7 @@ class SingleNode {
       }
       // node1 is the child one and node2 is the parent
       render(){
-        console.log('this.props.nodesCount: '+this.props.nodesCount);
+        // console.log('this.props.nodesCount: '+this.props.nodesCount);
         if(this.props.nodesCount <= 1)
           return null;
         let line = [];
@@ -134,7 +142,7 @@ class SingleNode {
 
         //the child is in the left
         if(node1Left < node2Left){
-          coordinates.top1 =  node2Top + 20;
+          coordinates.top1 =  node2Top + 40;
           coordinates.left1 = node2Left;
 
           coordinates.top2 =  node1Top;
@@ -144,8 +152,8 @@ class SingleNode {
         }
         // the child is on the right
         else{
-          coordinates.top1 =  node2Top + 20;
-          coordinates.left1 = node2Left + 20;
+          coordinates.top1 =  node2Top + 40;
+          coordinates.left1 = node2Left + 40;
 
           coordinates.top2 =  node1Top;
           coordinates.left2 = node1Left;
@@ -156,9 +164,14 @@ class SingleNode {
           index = index * -1;
         }
 
+        if(slope <=0){
+          slope = 1;
+        }
+
         // let loopCounter = 0;
 
         while(coordinates.top1 < coordinates.top2){
+          // console.log('line loop');
           coordinates.top1+= slope;
           coordinates.left1+= index;
           line.push(
@@ -185,6 +198,68 @@ class SingleNode {
           RootNode : null,
           lines : []
         };
+        this.maxLevel = 0;
+        this.oldMaxLevel = 0;
+        this.levelSpacing = 160;
+        this.levelSpacingFatcor = 1;
+      }
+
+      adjustAllLeftPositions(treeNodes){
+        // if(loopMaxLevel == this.oldMaxLevel)
+          // return;
+        let levels=[];
+        for(let i=0;i<treeNodes.length;i++){
+          if(levels.indexOf(treeNodes[i].level) == -1){
+            levels.push(treeNodes[i].level);
+          }
+        }
+        levels = levels.sort();
+        console.log('adjusting: '+levels);
+        if(levels.length <= 2)
+          return;
+
+        console.log('values:',this.oldMaxLevel,levels[levels.length-1]);
+        if(!(this.oldMaxLevel!=0 && this.oldMaxLevel >= levels[levels.length-1])){
+          /*if(treeNodes[treeNodes.length - 1].direction == 'left'){
+            treeNodes[treeNodes.length - 1].setLeft( (treeNodes[treeNodes.length - 1].parentNode.left - (40 * ((levels[levels.length-1] + 1) - treeNodes[treeNodes.length - 1].level))) / Math.pow(2,treeNodes[treeNodes.length - 1].level - 1) );
+          }
+          else {
+            treeNodes[treeNodes.length - 1].setLeft( (treeNodes[treeNodes.length - 1].parentNode.left + (40 * ((levels[levels.length-1] + 1) - treeNodes[treeNodes.length - 1].level))) / Math.pow(2,treeNodes[treeNodes.length - 1].level - 1) );
+          }*/
+          let adjustSpacing = parseInt(levels[levels.length-1]/5) * 100;
+          if(adjustSpacing % 5 == 0){
+            this.levelSpacing += adjustSpacing;
+            treeNodes[0].setLeft(adjustSpacing + treeNodes[0].left + (this.levelSpacing*  treeNodes[0].level));
+          }
+          else {
+            treeNodes[0].setLeft(treeNodes[0].left + (this.levelSpacing*  treeNodes[0].level));
+          }
+          // return;
+        }
+        this.oldMaxLevel = levels[levels.length-1];
+
+        // this.oldMaxLevel = loopMaxLevel;
+
+        let localSpacing = (this.levelSpacing *  (levels[levels.length-1] - (treeNodes[1].level-1)));
+
+        alert(localSpacing);
+
+        for(let i=1;i<treeNodes.length;i++){
+          if(treeNodes[i].direction == 'left'){
+            treeNodes[i].setLeft(treeNodes[i].parentNode.left - (localSpacing/Math.pow(2,treeNodes[i].level-1)) );
+            /*if(treeNodes[i].level != levels[levels.length-1])
+              treeNodes[i].setLeft( (treeNodes[i].parentNode.left - (this.levelSpacing *  (levels[levels.length-1] - (treeNodes[i].level-1)))   ) /* Math.pow(2,treeNodes[i].level - 1)*/ /*);
+            else
+              treeNodes[i].setLeft( (treeNodes[i].parentNode.left - (this.levelSpacing / 2)  ));*/
+          }
+          else {
+            treeNodes[i].setLeft((treeNodes[i].parentNode.left + 40) + (localSpacing/Math.pow(2,treeNodes[i].level-1)) );
+            /*if(treeNodes[i].level != levels[levels.length-1])
+              treeNodes[i].setLeft( (treeNodes[i].parentNode.left + (this.levelSpacing *  (levels[levels.length-1] - (treeNodes[i].level-1)))   ) /* Math.pow(2,treeNodes[i].level - 1)*/ /*);
+            /*else
+              treeNodes[i].setLeft( (treeNodes[i].parentNode.left + (this.levelSpacing / 2 ) ));*/
+          }
+        }
       }
 
       handleAddNumber(){
@@ -200,6 +275,7 @@ class SingleNode {
         }
 
         this.makeAllNodesBgBlue();
+        let rootLeft;
 
 
         if(this.state.NodesCount == 0){
@@ -208,11 +284,15 @@ class SingleNode {
           // NewRootNode.number = newNumber;
           // NewRootNode.top = 10;
           // NewRootNode.left = 400;
+          rootLeft = 500;
+          this.maxLevel ++;
+          // this.oldMaxLevel = this.maxLevel;
           NewRootNode.setNumber(newNumber);
           NewRootNode.setTop(10);
-          NewRootNode.setLeft(1000);
+          NewRootNode.setLeft(rootLeft);
           NewRootNode.setIndex(0);
           NewRootNode.setColor('Blue');
+          NewRootNode.setLevel(1);
 
           let newState = {
             RootNode: NewRootNode,
@@ -225,10 +305,20 @@ class SingleNode {
         else{
             let theNode = this.state.RootNode;
             let NewNode = null;
-            let level = 2;
-            let spacing = 600;
-            let spacingDecreasing = 250;
+            let level = 1;
+            let spacing = 60;
+            let loopMaxLevel = this.maxLevel;
+            // if(loopMaxLevel <1)
+              // spacing = 40;
+            // else {
+              // spacing = 40 * loopMaxLevel;
+              // theNode.setLeft(theNode.left + (spacing/2) );
+              //call the function that loops over all the nodes and adjust thier left position
+            this.adjustAllLeftPositions(this.state.TreeNodes);
+            // }
+            // let spacingDecreasing = 250;
             while(theNode!= null){
+              // console.log('This loop');
               if(newNumber <= theNode.number){
                   if( theNode.leftNode == null){
                     NewNode = new SingleNode();
@@ -239,21 +329,27 @@ class SingleNode {
 
                     NewNode.setParentNode(theNode);
                     NewNode.setNumber(newNumber);
+                    // if(level <=2)
+                    // NewNode.setLeft(theNode.left - 40 );
+                    // else
                     NewNode.setLeft(theNode.left - spacing );
                     NewNode.setTop(theNode.top + 80);
-                    NewNode.setColor('Red');
+                    NewNode.setColor('Green');
+                    NewNode.setLevel(level + 1);
+                    NewNode.setDirection('left');
 
                     theNode.setLeftNode(NewNode);
                     theNode.setColor('Red');
+                    // this.maxLevel ++;
                     break;
                 }
                 else{
                   theNode.setColor('Red');
                   theNode = theNode.leftNode;
-                  if(level != 2)
-                    spacingDecreasing = 150;
-                  spacing-=spacingDecreasing;
-                  level++;
+                  // if(level != 2)
+                    // spacingDecreasing = 150;
+                  spacing/=40;
+                  // level++;
                 }
               }
               else if(newNumber > theNode.number){
@@ -266,27 +362,34 @@ class SingleNode {
 
                     NewNode.setParentNode(theNode);
                     NewNode.setNumber(newNumber);
-                    NewNode.setLeft(theNode.left + spacing);
+                    NewNode.setLeft(40 + theNode.left + spacing);
                     NewNode.setTop(theNode.top + 80);
-                    NewNode.setColor('Red');
+                    NewNode.setColor('Green');
+                    NewNode.setLevel(level + 1);
+                    NewNode.setDirection('right');
 
                     theNode.setRightNode(NewNode);
                     theNode.setColor('Red');
+                    // this.maxLevel ++;
                     break;
                 }
                 else{
                   theNode.setColor('Red');
                   theNode = theNode.rightNode;
-                  if(level != 2)
-                    spacingDecreasing = 150;
-                  spacing-=spacingDecreasing;
-                  level++;
+                  // if(level != 2)
+                    // spacingDecreasing = 150;
+                  spacing/=40;
+                  // level++;
                 }
               }
               // console.log('theNode: '+JSON.stringify(theNode));
-              if(spacing <= 0)
-                spacing = 400;
+            //   if(spacing <= 0)
+            //     spacing = 400;
+            level++;
             }
+
+            if(this.maxLevel < level)
+              this.maxLevel = level;
 
             this.lineParentNode = theNode;
             this.lineChildNode = NewNode;
@@ -300,13 +403,22 @@ class SingleNode {
               newStateLines=[<Line node1={this.lineChildNode} node2={this.lineParentNode} nodesCount={this.state.NodesCount + 1}/>];
             }
             else{
-              newStateLines = [...newStateLines,<Line node1={this.lineChildNode} node2={this.lineParentNode} nodesCount={this.state.NodesCount}/>];
+              // we need to redraw all the lines once again
+              // newStateLines = [...newStateLines,<Line node1={this.lineChildNode} node2={this.lineParentNode} nodesCount={this.state.NodesCount}/>];
+              // newStateLines = [<Line node1={this.lineChildNode} node2={this.lineParentNode} nodesCount={this.state.NodesCount}/>];
+              newStateLines = [];
+              let treeNodes = [...oldNodes,NewNode];
+              for(let i=1;i<treeNodes.length;i++){
+                // newStateLines.push(<Line node1={this.state.TreeNodes[i]} node2={this.state.TreeNodes[i-1]} nodesCount={this.state.NodesCount}/>);
+                newStateLines = [...newStateLines,<Line node1={treeNodes[i]} node2={treeNodes[i].parentNode} nodesCount={this.state.NodesCount + 1}/>];
+              }
             }
             let newState = {
               NodesCount: oldNodeCount + 1,
               TreeNodes: [...oldNodes,NewNode],
               lines: newStateLines
             };
+            this.adjustAllLeftPositions(newState.TreeNodes);
             // console.log(newState.lines);
             this.setState(newState);
         }
