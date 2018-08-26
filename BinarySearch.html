@@ -90,7 +90,9 @@ class SingleNode {
           backgroundColor: node.getColor(),
           position: 'absolute',
           color: 'white',
-          fontSize: 'small'
+          fontSize: 'small',
+          textAlign: 'center',
+          borderRadius: '50%'
         };
       }
 
@@ -99,6 +101,7 @@ class SingleNode {
         // console.log(this.props.nodes);
         let drawnNodes = this.props.nodes.map(node =>
           <div key={node.index} style = {this.getStyle(node)}>
+            <br/>
             {node.number}({node.level})
           </div>
         );
@@ -125,10 +128,19 @@ class SingleNode {
           return null;
         let line = [];
         let index = 1;
-        let node1Left = this.props.node1.left;
-        let node2Left = this.props.node2.left;
+        let node1Left = this.props.node1.left + 20;
+        let node2Left = 0;
+        if(this.props.node1.direction == 'left')
+          node2Left = this.props.node2.left + 20;
+        else
+          node2Left = this.props.node2.left - 20;
         let node1Top = this.props.node1.top;
-        let node2Top = this.props.node2.top;
+
+        let node2Top = 0;
+        if(this.props.node1.direction == 'left')
+          node2Top = this.props.node2.top;
+        else
+          node2Top = this.props.node2.top - 2;
 
         let coordinates = {top1: 0, top2: 0, left1: 0, left2: 0};
         let slope = 0;
@@ -200,7 +212,7 @@ class SingleNode {
         };
         this.maxLevel = 0;
         this.oldMaxLevel = 0;
-        this.levelSpacing = 160;
+        this.levelSpacing = 120;
         this.levelSpacingFatcor = 1;
       }
 
@@ -210,7 +222,7 @@ class SingleNode {
         let levels=[];
         for(let i=0;i<treeNodes.length;i++){
           if(levels.indexOf(treeNodes[i].level) == -1){
-            levels.push(treeNodes[i].level);
+            levels.push(parseInt(treeNodes[i].level));
           }
         }
         levels = levels.sort();
@@ -218,17 +230,22 @@ class SingleNode {
         if(levels.length <= 2)
           return;
 
-        console.log('values:',this.oldMaxLevel,levels[levels.length-1]);
-        if(!(this.oldMaxLevel!=0 && this.oldMaxLevel >= levels[levels.length-1])){
+        let adjustSpacing = 0;
+        console.log('values:',this.oldMaxLevel,levels.length);
+        if(!(this.oldMaxLevel!=0 && this.oldMaxLevel >= levels.length) ){
           /*if(treeNodes[treeNodes.length - 1].direction == 'left'){
             treeNodes[treeNodes.length - 1].setLeft( (treeNodes[treeNodes.length - 1].parentNode.left - (40 * ((levels[levels.length-1] + 1) - treeNodes[treeNodes.length - 1].level))) / Math.pow(2,treeNodes[treeNodes.length - 1].level - 1) );
           }
           else {
             treeNodes[treeNodes.length - 1].setLeft( (treeNodes[treeNodes.length - 1].parentNode.left + (40 * ((levels[levels.length-1] + 1) - treeNodes[treeNodes.length - 1].level))) / Math.pow(2,treeNodes[treeNodes.length - 1].level - 1) );
           }*/
-          let adjustSpacing = parseInt(levels[levels.length-1]/5) * 100;
-          if(adjustSpacing % 5 == 0){
-            this.levelSpacing += adjustSpacing;
+          if(levels.length % 5 == 0){
+            adjustSpacing = parseInt(levels.length/5) * 200;
+            console.log('adjustSpacing: ',adjustSpacing);
+            // if(parseInt(levels.length/5) % 2 == 0)
+              this.levelSpacing *= Math.pow(2,parseInt(levels.length/5));
+              this.levelSpacing+= 80 * Math.pow(2,parseInt(levels.length/5));
+
             treeNodes[0].setLeft(adjustSpacing + treeNodes[0].left + (this.levelSpacing*  treeNodes[0].level));
           }
           else {
@@ -236,29 +253,48 @@ class SingleNode {
           }
           // return;
         }
-        this.oldMaxLevel = levels[levels.length-1];
+        this.oldMaxLevel = levels.length;
 
         // this.oldMaxLevel = loopMaxLevel;
 
-        let localSpacing = (this.levelSpacing *  (levels[levels.length-1] - (treeNodes[1].level-1)));
+        let localSpacing = (this.levelSpacing *  (levels.length - (treeNodes[1].level-1)));
 
-        alert(localSpacing);
+        // alert(localSpacing);
+
+        let isThereNegative = false;
+        let iterationLeft = 0;
+        let minLeft = 0;
 
         for(let i=1;i<treeNodes.length;i++){
           if(treeNodes[i].direction == 'left'){
-            treeNodes[i].setLeft(treeNodes[i].parentNode.left - (localSpacing/Math.pow(2,treeNodes[i].level-1)) );
+            iterationLeft = (treeNodes[i].parentNode.left) - (localSpacing/Math.pow(2,treeNodes[i].level-1));
             /*if(treeNodes[i].level != levels[levels.length-1])
               treeNodes[i].setLeft( (treeNodes[i].parentNode.left - (this.levelSpacing *  (levels[levels.length-1] - (treeNodes[i].level-1)))   ) /* Math.pow(2,treeNodes[i].level - 1)*/ /*);
             else
               treeNodes[i].setLeft( (treeNodes[i].parentNode.left - (this.levelSpacing / 2)  ));*/
           }
           else {
-            treeNodes[i].setLeft((treeNodes[i].parentNode.left + 40) + (localSpacing/Math.pow(2,treeNodes[i].level-1)) );
+            iterationLeft = (treeNodes[i].parentNode.left) + (localSpacing/Math.pow(2,treeNodes[i].level-1));
             /*if(treeNodes[i].level != levels[levels.length-1])
               treeNodes[i].setLeft( (treeNodes[i].parentNode.left + (this.levelSpacing *  (levels[levels.length-1] - (treeNodes[i].level-1)))   ) /* Math.pow(2,treeNodes[i].level - 1)*/ /*);
             /*else
               treeNodes[i].setLeft( (treeNodes[i].parentNode.left + (this.levelSpacing / 2 ) ));*/
           }
+          treeNodes[i].setLeft(iterationLeft);
+          if(iterationLeft < 0){
+            isThereNegative = true;
+            if(iterationLeft < minLeft)
+              minLeft = iterationLeft;
+          }
+        }
+        if(isThereNegative){
+          this.adjustNegativeNodes(treeNodes,(minLeft * -1) + 40);
+        }
+      }
+
+      adjustNegativeNodes(treeNodes,adjusting){
+        for(let i=0;i<treeNodes.length;i++){
+          treeNodes[i].setLeft(treeNodes[i].left + adjusting);
         }
       }
 
@@ -269,8 +305,8 @@ class SingleNode {
           return;
         }
         newNumber = parseInt(newNumber);
-        if(isNaN(newNumber)){
-          alert('Only numbers are allowed you, the funniest guy in the whole world :)');
+        if(!Number.isInteger(newNumber)){
+          alert('Only integer numbers are allowed you, the funniest guy in the whole world :)');
           return;
         }
 
@@ -314,7 +350,7 @@ class SingleNode {
               // spacing = 40 * loopMaxLevel;
               // theNode.setLeft(theNode.left + (spacing/2) );
               //call the function that loops over all the nodes and adjust thier left position
-            this.adjustAllLeftPositions(this.state.TreeNodes);
+            // this.adjustAllLeftPositions(this.state.TreeNodes);
             // }
             // let spacingDecreasing = 250;
             while(theNode!= null){
@@ -399,6 +435,12 @@ class SingleNode {
             NewNode.setIndex(oldNodeCount + 1);
             let newStateLines = this.state.lines;
             // console.log('length: '+newStateLines.length);
+            let newState = {
+              NodesCount: oldNodeCount + 1,
+              TreeNodes: [...oldNodes,NewNode],
+              lines: []
+            };
+            this.adjustAllLeftPositions(newState.TreeNodes);
             if(newStateLines.length == 0){
               newStateLines=[<Line node1={this.lineChildNode} node2={this.lineParentNode} nodesCount={this.state.NodesCount + 1}/>];
             }
@@ -413,12 +455,12 @@ class SingleNode {
                 newStateLines = [...newStateLines,<Line node1={treeNodes[i]} node2={treeNodes[i].parentNode} nodesCount={this.state.NodesCount + 1}/>];
               }
             }
-            let newState = {
+            newState = {
               NodesCount: oldNodeCount + 1,
               TreeNodes: [...oldNodes,NewNode],
               lines: newStateLines
             };
-            this.adjustAllLeftPositions(newState.TreeNodes);
+            // this.adjustAllLeftPositions(newState.TreeNodes);
             // console.log(newState.lines);
             this.setState(newState);
         }
